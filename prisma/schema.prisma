@@ -10,5 +10,47 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  balance   Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outgoingTransactions Transaction[] @relation("UserTransactionsSent")
+  incomingTransactions Transaction[] @relation("UserTransactionsReceived")
+
+
+  ticketsCreated ticket[]
+
+  ticketsAccepted ticket[] @relation("ticketCompetitors")
+}
+
+model Transaction {
+  id                  String   @id @default(cuid())
+  amount              Float
+  userId              String
+  receiverId          String
+  user                User     @relation("UserTransactionsSent", fields: [userId], references: [id])
+  receiver            User     @relation("UserTransactionsReceived", fields: [receiverId], references: [id])
+  createdAt           DateTime @default(now())
+}
+
+model ticket {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  userId    String
+  reward    Float
+  user      User     @relation(fields: [userId], references: [id])
+  maxParticipants Int
+  maxFinishers Int
+  competitors User[] @relation("ticketCompetitors")
+  createdAt DateTime @default(now())
 }
