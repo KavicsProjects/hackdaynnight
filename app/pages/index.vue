@@ -7,5 +7,7 @@ import Graph from '../components/linegraph.vue';
   <div>
     <NuxtRouteAnnouncer />
       <linegraph />
+    <NuxtWelcome />
+    <Navigation />
   </div>
 </template>
