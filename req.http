@@ -1,0 +1,40 @@
+GET http://localhost:3000/api/hello HTTP/1.1
+
+###
+
+PUT http://localhost:3000/api/ticket HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "2body.title",
+    "description": "2body.description",
+    "email":"body.email",
+    "content": "2body.content",
+    "reward": 21,
+    "maxFinishers": 2,
+    "maxParticipants": 32
+}
+###
+
+PUT http://localhost:3000/api/user HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "body.email",
+    "name": "body.name",
+    "password": "body.password"
+}
+
+
+
+###
+GET http://localhost:3000/api/ticket/123 HTTP/1.1
+
+
+###
+GET http://localhost:3000/api/ticket/ HTTP/1.1
+
+###
+GET http://localhost:3000/api/user/ HTTP/1.1
+
+###
