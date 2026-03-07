@@ -194,14 +194,53 @@
             </div>
           </div>
 
-          <button
-            class="delete-btn"
-            :disabled="deleting === ticket.id"
-            @click="deleteTask(ticket.id)"
-          >
-            <Icon name="mdi:trash-can-outline" />
-            {{ deleting === ticket.id ? 'Deleting...' : 'Delete Task' }}
-          </button>
+          <!-- Inline tag editor -->
+          <div v-if="editingTagsFor === ticket.id" class="tag-editor">
+            <div class="email-input-row">
+              <input
+                v-model="editTagInput"
+                type="text"
+                placeholder="Add tag..."
+                class="text-input"
+                @keyup.enter="addEditTag(ticket.id)"
+              />
+              <button class="add-email-btn" @click="addEditTag(ticket.id)">
+                <Icon name="mdi:plus" />
+              </button>
+            </div>
+            <div v-if="editTagList.length > 0" class="email-tags">
+              <span
+                v-for="tag in editTagList"
+                :key="tag"
+                class="ticket-tag removable"
+                @click="removeEditTag(tag)"
+              >
+                #{{ tag }} <Icon name="mdi:close" class="tag-close" />
+              </span>
+            </div>
+            <div class="tag-editor-actions">
+              <button class="save-tags-btn" :disabled="savingTags === ticket.id" @click="saveTags(ticket.id)">
+                <span v-if="savingTags === ticket.id" class="spinner-sm"></span>
+                {{ savingTags === ticket.id ? 'Saving...' : 'Save Tags' }}
+              </button>
+              <button class="cancel-tags-btn" @click="editingTagsFor = null">Cancel</button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="edit-tags-btn" @click="openTagEditor(ticket)">
+              <Icon name="mdi:tag-edit-outline" />
+              Tags
+            </button>
+            <button
+              class="delete-btn"
+              :disabled="deleting === ticket.id"
+              @click="deleteTask(ticket.id)"
+            >
+              <Icon name="mdi:trash-can-outline" />
+              {{ deleting === ticket.id ? 'Deleting...' : 'Delete Task' }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -381,6 +420,10 @@ const emailInput = ref('')
 const tagInput = ref('')
 const activeTagFilter = ref(null)
 const sortOrder = ref('date_desc')
+const editingTagsFor = ref(null)
+const editTagInput = ref('')
+const editTagList = ref([])
+const savingTags = ref(null)
 const newTask = reactive({
   title: '',
   content: '',
@@ -571,6 +614,42 @@ function addTag() {
 
 function removeTag(tag) {
   newTask.tags = newTask.tags.filter(t => t !== tag)
+}
+
+function openTagEditor(ticket) {
+  editingTagsFor.value = ticket.id
+  editTagList.value = Array.isArray(ticket.tags) ? [...ticket.tags] : []
+  editTagInput.value = ''
+}
+
+function addEditTag() {
+  const tag = editTagInput.value.trim().toLowerCase().replace(/\s+/g, '-')
+  if (!tag) return
+  if (!editTagList.value.includes(tag)) {
+    editTagList.value.push(tag)
+  }
+  editTagInput.value = ''
+}
+
+function removeEditTag(tag) {
+  editTagList.value = editTagList.value.filter(t => t !== tag)
+}
+
+async function saveTags(ticketId) {
+  savingTags.value = ticketId
+  try {
+    await $fetch(`/api/ticket/${ticketId}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: { tags: editTagList.value }
+    })
+    editingTagsFor.value = null
+    await loadTickets()
+  } catch (err) {
+    alert(err?.data?.error ?? 'Failed to save tags')
+  } finally {
+    savingTags.value = null
+  }
 }
 
 async function createTask() {
@@ -1042,6 +1121,80 @@ function formatDate(dateStr) {
 }
 
 .accept-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.edit-tags-btn {
+  padding: 0.625rem 1rem;
+  background: var(--clr-primary-dim);
+  color: var(--clr-primary);
+  border: 1px solid rgba(0, 212, 170, 0.25);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  transition: background 0.2s;
+}
+
+.edit-tags-btn:hover { background: rgba(0, 212, 170, 0.2); }
+
+.tag-editor {
+  background: var(--clr-bg);
+  border: 1px solid var(--clr-border);
+  border-radius: 14px;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.tag-editor-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-tags-btn {
+  padding: 0.5rem 1.25rem;
+  background: var(--clr-primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: opacity 0.2s;
+}
+
+.save-tags-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cancel-tags-btn {
+  padding: 0.5rem 1rem;
+  background: none;
+  color: var(--clr-text-sub);
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.cancel-tags-btn:hover { background: var(--clr-card-high); }
 
 .delete-btn {
   padding: 0.625rem 1rem;
