@@ -9,5 +9,5 @@ export default defineNuxtConfig({
     preset: "bun", 
   },
 
-  modules: ["@nuxt/icon"],
+  modules: ["@nuxt/icon", "@nuxt/image"],
 })
