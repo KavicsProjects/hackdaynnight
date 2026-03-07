@@ -308,7 +308,7 @@ const emailInput = ref('')
 const newTask = reactive({
   title: '',
   content: '',
-  reward: null,
+  reward: 0,
   maxFinishers: 1,
   maxParticipants: 10,
   allowedEmails: []
@@ -491,7 +491,7 @@ async function createTask() {
       }
     })
     showCreateModal.value = false
-    Object.assign(newTask, { title: '', content: '', reward: null, maxFinishers: 1, maxParticipants: 10, allowedEmails: [] })
+    Object.assign(newTask, { title: '', content: '', reward: 0, maxFinishers: 1, maxParticipants: 10, allowedEmails: [] })
     await loadTickets()
     await fetchUser()
     activeTab.value = 'mine'

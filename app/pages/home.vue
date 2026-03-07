@@ -51,7 +51,12 @@
         </div>
       </div>
       <div class="chart-wrapper">
-        <Linegraph />
+        <Linegraph
+          :transactions="allTransactions"
+          :current-balance="user?.balance ?? 0"
+          :user-id="user?.id ?? ''"
+          :period="activePeriod"
+        />
       </div>
     </section>
 
@@ -89,13 +94,16 @@ import { ref, computed, onMounted } from 'vue'
 
 const { user, fetchUser, authHeaders } = useAuth()
 const recentTransactions = ref([])
+const allTransactions = ref([])
 
 onMounted(async () => {
   await fetchUser()
   if (user.value) {
     try {
       const data = await $fetch('/api/transaction/my', { headers: authHeaders() })
-      recentTransactions.value = (data.transactions ?? []).slice(0, 3).map(tx => ({
+      const txList = data.transactions ?? []
+      allTransactions.value = txList
+      recentTransactions.value = txList.slice(0, 3).map(tx => ({
         name: tx.userId === user.value.id ? tx.receiver.name : tx.user.name,
         date: new Date(tx.createdAt).toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' }),
         amount: tx.userId === user.value.id ? -tx.amount : tx.amount,

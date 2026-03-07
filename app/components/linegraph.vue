@@ -3,6 +3,7 @@
 
 <script setup>
 import { Line } from 'vue-chartjs'
+import { computed } from 'vue'
 import {
   Chart as ChartJS,
   Title,
@@ -16,6 +17,13 @@ import {
 } from 'chart.js'
 import { useRouter } from 'vue-router'
 
+const props = defineProps({
+  transactions: { type: Array, default: () => [] },
+  currentBalance: { type: Number, default: 0 },
+  userId: { type: String, default: '' },
+  period: { type: String, default: '1M' },
+})
+
 const router = useRouter()
 
 ChartJS.register(
@@ -25,8 +33,66 @@ ChartJS.register(
   Filler,
 )
 
-const chartData = {
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan \'26', 'Feb \'26', 'Mar \'26'],
+function getCutoffDate(period) {
+  const now = new Date()
+  const days = { '1W': 7, '1M': 30, '3M': 90, '1Y': 365 }[period] ?? 30
+  return new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+}
+
+function txEffect(tx) {
+  if (tx.receiverId === props.userId) return tx.amount
+  if (tx.userId === props.userId) return -tx.amount
+  return 0
+}
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' })
+}
+
+const ONE_MINUTE_MS = 60_000
+
+const balanceData = computed(() => {
+  if (!props.userId || props.transactions.length === 0) {
+    return { labels: ['Now'], values: [props.currentBalance] }
+  }
+
+  const allSorted = [...props.transactions].sort(
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+  )
+
+  // Compute balance before any transactions
+  const totalEffect = allSorted.reduce((sum, tx) => sum + txEffect(tx), 0)
+  const startBalance = props.currentBalance - totalEffect
+
+  const cutoff = getCutoffDate(props.period)
+
+  // Balance at start of the selected period
+  const txBeforePeriod = allSorted.filter(tx => new Date(tx.createdAt) < cutoff)
+  const balanceAtStart = startBalance + txBeforePeriod.reduce((sum, tx) => sum + txEffect(tx), 0)
+
+  const txInPeriod = allSorted.filter(tx => new Date(tx.createdAt) >= cutoff)
+
+  const labels = [formatDate(cutoff)]
+  const values = [balanceAtStart]
+
+  let balance = balanceAtStart
+  for (const tx of txInPeriod) {
+    balance += txEffect(tx)
+    labels.push(formatDate(new Date(tx.createdAt)))
+    values.push(balance)
+  }
+
+  // Add current point if last transaction wasn't very recent
+  if (txInPeriod.length === 0 || new Date() - new Date(txInPeriod[txInPeriod.length - 1].createdAt) > ONE_MINUTE_MS) {
+    labels.push('Now')
+    values.push(props.currentBalance)
+  }
+
+  return { labels, values }
+})
+
+const chartData = computed(() => ({
+  labels: balanceData.value.labels,
   datasets: [
     {
       label: 'Balance',
@@ -40,15 +106,15 @@ const chartData = {
       borderColor: '#00D4AA',
       pointBackgroundColor: '#00D4AA',
       pointBorderColor: '#00D4AA',
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      data: [120, 190, 150, 230, 180, 180, 310, 280, 260, 300, 250, 290, 310, 270, 320],
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      data: balanceData.value.values,
       tension: 0.4,
       fill: true,
       borderWidth: 2,
     },
   ],
-}
+}))
 
 const chartOptions = {
   responsive: true,
@@ -68,6 +134,9 @@ const chartOptions = {
       borderWidth: 1,
       padding: 12,
       cornerRadius: 10,
+      callbacks: {
+        label: (ctx) => `${ctx.parsed.y.toLocaleString('hu-HU')} HUF`,
+      },
     },
   },
   scales: {
@@ -82,6 +151,7 @@ const chartOptions = {
         color: '#8888AA',
         font: { size: 11 },
         maxRotation: 0,
+        maxTicksLimit: 6,
       },
     },
     y: {
@@ -96,6 +166,7 @@ const chartOptions = {
         color: '#8888AA',
         font: { size: 11 },
         padding: 8,
+        callback: (val) => val.toLocaleString('hu-HU'),
       },
     },
   },
