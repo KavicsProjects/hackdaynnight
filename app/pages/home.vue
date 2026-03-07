@@ -1,12 +1,8 @@
 <template>
   <div class="page-container">
-    <header class="header">
-      <img 
-        src="https://i.pravatar.cc/150?img=11" 
-        alt="Profile Picture" 
-        class="profile-pic" 
-      />
-    </header>
+    <div class="header">
+        <NuxtImg class="profile-pic" src="img/profile-name.jpg" />
+    </div>
 
     <main class="main-content">
       <h1 class="balance-text">HUF 999999</h1>
@@ -62,8 +58,6 @@ html, body {
 
 /* Header with Top-Left Profile Picture */
 .header {
-  display: flex;
-  justify-content: flex-start;
   margin-bottom: 2rem;
 }
 
