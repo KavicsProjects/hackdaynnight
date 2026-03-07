@@ -11,9 +11,7 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    let resp = [];
-
-    resp[0] = await prisma.userTicketConnect.update({
+    const ticketConnect = await prisma.userTicketConnect.update({
         where: {
             userId_ticketId: {
                 userId: body.userId,
@@ -43,8 +41,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (ticketResp.reward != 0) {
-
-        resp[1] = await prisma.user.update({
+        const userUpdate = await prisma.user.update({
             where: {
                 id: body.userId
             },
@@ -53,13 +50,12 @@ export default defineEventHandler(async (event) => {
             }
         });
 
-        resp[2] = await prisma.transaction.create({
+        const transaction = await prisma.transaction.create({
             data: {
                 amount: ticketResp.reward,
                 user: {
                     connect: {
                         id: ticketResp.userId
-
                     }
                 },
                 receiver: {
@@ -67,12 +63,15 @@ export default defineEventHandler(async (event) => {
                         id: body.userId
                     }
                 }
-
             }
         });
+
+        return {
+            response: { ticketConnect, userUpdate, transaction }
+        }
     }
 
     return {
-        response: resp
+        response: { ticketConnect }
     }
 })
