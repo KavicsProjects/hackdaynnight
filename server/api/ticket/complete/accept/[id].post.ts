@@ -11,18 +11,6 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    const ticketConnect = await prisma.userTicketConnect.update({
-        where: {
-            userId_ticketId: {
-                userId: body.userId,
-                ticketId: id
-            }
-        },
-        data: {
-            acceptedByAuthor: true
-        }
-    })
-
     const ticketResp = await prisma.ticket.findUnique({
         where: {
             id: id
@@ -40,38 +28,77 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    if (ticketResp.reward != 0) {
-        const userUpdate = await prisma.user.update({
+    const result = await prisma.$transaction(async (tx) => {
+        const existingConnect = await tx.userTicketConnect.findUnique({
             where: {
-                id: body.userId
+                userId_ticketId: {
+                    userId: body.userId,
+                    ticketId: id
+                }
+            },
+            select: {
+                acceptedByAuthor: true
+            }
+        });
+
+        if (existingConnect === null) {
+            return { notFound: true };
+        }
+
+        const alreadyAccepted = existingConnect.acceptedByAuthor;
+
+        const ticketConnect = await tx.userTicketConnect.update({
+            where: {
+                userId_ticketId: {
+                    userId: body.userId,
+                    ticketId: id
+                }
             },
             data: {
-                balance: {increment: ticketResp.reward}
+                acceptedByAuthor: true
             }
         });
 
-        const transaction = await prisma.transaction.create({
-            data: {
-                amount: ticketResp.reward,
-                user: {
-                    connect: {
-                        id: ticketResp.userId
-                    }
+        if (ticketResp.reward !== 0 && !alreadyAccepted) {
+            const userUpdate = await tx.user.update({
+                where: {
+                    id: body.userId
                 },
-                receiver: {
-                    connect: {
-                        id: body.userId
+                data: {
+                    balance: { increment: ticketResp.reward }
+                }
+            });
+
+            const transaction = await tx.transaction.create({
+                data: {
+                    amount: ticketResp.reward,
+                    user: {
+                        connect: {
+                            id: ticketResp.userId
+                        }
+                    },
+                    receiver: {
+                        connect: {
+                            id: body.userId
+                        }
                     }
                 }
-            }
-        });
+            });
 
+            return { ticketConnect, userUpdate, transaction };
+        }
+
+        return { ticketConnect };
+    });
+
+    if ('notFound' in result) {
+        setResponseStatus(event, 404);
         return {
-            response: { ticketConnect, userUpdate, transaction }
+            error: "Ticket connection not found"
         }
     }
 
     return {
-        response: { ticketConnect }
+        response: result
     }
 })
