@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const hashedPassword = await bcrypt.hash(body.password, 12)
 
   const user = await prisma.user.create({
-    data: { name: body.name, email: body.email, password: hashedPassword },
+    data: { name: body.name, email: body.email, password: hashedPassword, balance: 100000 },
     select: { id: true, name: true, email: true, balance: true, profilePicture: true, createdAt: true }
   })
 

@@ -11,6 +11,11 @@
         <span class="nav-label">QR</span>
       </NuxtLink>
 
+      <NuxtLink to="/tasks" class="nav-item" title="Tasks">
+        <Icon name="mdi:clipboard-check-outline" class="nav-icon" />
+        <span class="nav-label">Tasks</span>
+      </NuxtLink>
+
       <NuxtLink to="/fizetesek" class="nav-item" title="Payments">
         <Icon name="mdi:swap-horizontal" class="nav-icon" />
         <span class="nav-label">Payments</span>
