@@ -116,9 +116,11 @@ onMounted(async () => {
 
 const actualEarnings = computed(() => {
   if (!user.value) return 0
-  return allTransactions.value
-    .filter(tx => tx.receiverId === user.value?.id)
-    .reduce((sum, tx) => sum + tx.amount, 0)
+  return allTransactions.value.reduce((sum, tx) => {
+    if (tx.receiverId === user.value?.id) return sum + tx.amount
+    if (tx.userId === user.value?.id) return sum - tx.amount
+    return sum
+  }, 0)
 })
 
 const greeting = computed(() => {
