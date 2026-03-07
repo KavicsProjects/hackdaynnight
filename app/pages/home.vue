@@ -1,127 +1,384 @@
 <template>
-  <div class="page-container">
-    <div class="header">
-        <NuxtImg class="profile-pic" src="img/profile-name.jpg" />
-    </div>
-
-    <main class="main-content">
-      <h1 class="balance-text">HUF 999999</h1>
-    <div class="lineargraph">
-        <Linegraph />
-    </div>
-
-      <section class="tasks-container">
-        <div v-for="(task, index) in tasks" :key="index" class="task-card">
-          <h2 class="task-title">{{ task.title }}</h2>
-          <p class="task-description">{{ task.description }}</p>
+  <div class="home">
+    <!-- Top header: avatar + greeting + notification bell -->
+    <header class="top-header">
+      <div class="profile-section">
+        <NuxtImg
+          class="avatar"
+          src="/img/profile-name.jpg"
+          alt="Profile picture"
+          width="48"
+          height="48"
+        />
+        <div class="greeting">
+          <span class="greeting-label">Good morning</span>
+          <span class="greeting-name">Alex</span>
         </div>
-      </section>
-    </main>
+      </div>
+      <button class="icon-btn" aria-label="Notifications">
+        <Icon name="mdi:bell-outline" />
+      </button>
+    </header>
+
+    <!-- Balance card -->
+    <section class="balance-card">
+      <p class="balance-label">Total Balance</p>
+      <h1 class="balance-amount">999 999 <span class="balance-currency">HUF</span></h1>
+      <div class="balance-change positive">
+        <Icon name="mdi:trending-up" class="change-icon" />
+        <span>+2.4% this month</span>
+      </div>
+    </section>
+
+    <!-- Graph section -->
+    <section class="chart-section">
+      <div class="section-header">
+        <span class="section-title">Performance</span>
+        <div class="time-filters">
+          <button
+            v-for="period in periods"
+            :key="period"
+            class="filter-btn"
+            :class="{ active: activePeriod === period }"
+            @click="activePeriod = period"
+          >
+            {{ period }}
+          </button>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <Linegraph />
+      </div>
+    </section>
+
+    <!-- Recent activity -->
+    <section class="activity-section">
+      <div class="section-header">
+        <span class="section-title">Recent Activity</span>
+        <NuxtLink to="/fizetesek" class="see-all">See all</NuxtLink>
+      </div>
+
+      <div class="tx-list">
+        <div v-for="(tx, i) in transactions" :key="i" class="tx-item">
+          <div class="tx-icon-wrap" :style="{ background: tx.bg }">
+            <Icon :name="tx.icon" class="tx-icon" />
+          </div>
+          <div class="tx-info">
+            <span class="tx-name">{{ tx.name }}</span>
+            <span class="tx-date">{{ tx.date }}</span>
+          </div>
+          <span class="tx-amount" :class="tx.amount > 0 ? 'positive' : 'negative'">
+            {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount.toLocaleString('hu-HU') }} HUF
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom navigation spacer so content isn't hidden behind nav -->
+    <div class="nav-spacer"></div>
+    <Navigation />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 
-// Mock data for the tasks column
-const tasks = ref([
+const periods = ['1W', '1M', '3M', '1Y']
+const activePeriod = ref('1M')
+
+const transactions = ref([
   {
-    title: 'Review Monthly Budget',
-    description: 'Analyze expenses from last month and allocate funds for upcoming utility bills.'
+    name: 'Salary',
+    date: 'Jun 1',
+    amount: 450000,
+    icon: 'mdi:bank-transfer-in',
+    bg: 'rgba(0, 212, 170, 0.15)',
   },
   {
-    title: 'Client Meeting',
-    description: 'Discuss the new web application architecture and feature requirements.'
+    name: 'Grocery Store',
+    date: 'Jun 3',
+    amount: -12400,
+    icon: 'mdi:cart-outline',
+    bg: 'rgba(108, 99, 255, 0.15)',
   },
   {
-    title: 'Update Nuxt Dependencies',
-    description: 'Migrate the legacy components to ensure full compatibility with Nuxt 4.'
-  }
+    name: 'Netflix',
+    date: 'Jun 5',
+    amount: -3990,
+    icon: 'mdi:television-play',
+    bg: 'rgba(255, 92, 122, 0.15)',
+  },
+  {
+    name: 'Freelance payment',
+    date: 'Jun 7',
+    amount: 85000,
+    icon: 'mdi:briefcase-outline',
+    bg: 'rgba(0, 152, 239, 0.15)',
+  },
 ])
 </script>
 
-<style>
-/* Reset some default browser margins for a clean look */
-html, body {
-  margin: 0;
-  padding: 0;
-  background-color: #2c3e50;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #ffffff;
-}
-
-.page-container {
+<style scoped>
+.home {
   min-height: 100vh;
-  padding: 2rem;
-  box-sizing: border-box;
-}
-
-/* Header with Top-Left Profile Picture */
-.header {
-  margin-bottom: 2rem;
-}
-
-.profile-pic {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #34495e;
-}
-
-/* Main Content Layout */
-.main-content {
+  background: var(--clr-bg);
+  padding: 1.5rem 1.25rem 0;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 1.75rem;
 }
 
-/* Big Text styling */
-.balance-text {
-  font-size: 4rem;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -1px;
-}
-
-
-.lineargraph {
-    display: flex;
-    justify-content: center;
-}
-
-
-/* Tasks Column */
-.tasks-container {
+/* ── Top header ── */
+.top-header {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: center;
-  width:100%;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.task-card {
-  background-color: #34495e;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  min-width:100px;
-  flex-basis:15rem;
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.task-title {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.25rem;
-  color: #ecf0f1;
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--clr-primary);
+  flex-shrink: 0;
 }
 
-.task-description {
-  margin: 0;
+.greeting {
+  display: flex;
+  flex-direction: column;
+}
+
+.greeting-label {
+  font-size: 0.75rem;
+  color: var(--clr-text-sub);
+}
+
+.greeting-name {
   font-size: 1rem;
-  color: #bdc3c7;
-  line-height: 1.5;
+  font-weight: 700;
+  color: var(--clr-text);
 }
 
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--clr-text-sub);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
 
+.icon-btn:hover {
+  background: var(--clr-card-high);
+}
+
+/* ── Balance card ── */
+.balance-card {
+  background: var(--clr-card);
+  border-radius: 24px;
+  padding: 1.75rem;
+  border: 1px solid var(--clr-border);
+}
+
+.balance-label {
+  font-size: 0.8125rem;
+  color: var(--clr-text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.625rem;
+}
+
+.balance-amount {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: var(--clr-text);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.balance-currency {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--clr-text-sub);
+}
+
+.balance-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+}
+
+.balance-change.positive {
+  color: var(--clr-positive);
+  background: var(--clr-primary-dim);
+}
+
+.balance-change.negative {
+  color: var(--clr-negative);
+  background: rgba(255, 92, 122, 0.12);
+}
+
+.change-icon {
+  font-size: 1rem;
+}
+
+/* ── Chart section ── */
+.chart-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--clr-text);
+}
+
+.time-filters {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--clr-card);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--clr-border);
+}
+
+.filter-btn {
+  padding: 0.3rem 0.7rem;
+  border: none;
+  background: none;
+  color: var(--clr-text-sub);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.filter-btn.active {
+  background: var(--clr-card-high);
+  color: var(--clr-text);
+}
+
+.chart-wrapper {
+  background: var(--clr-card);
+  border-radius: 20px;
+  border: 1px solid var(--clr-border);
+  padding: 1rem;
+  overflow: hidden;
+}
+
+/* ── Activity section ── */
+.activity-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.see-all {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--clr-primary);
+}
+
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.tx-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  background: var(--clr-card);
+  border-radius: 16px;
+  border: 1px solid var(--clr-border);
+  transition: background 0.15s;
+}
+
+.tx-item + .tx-item {
+  margin-top: 0.5rem;
+}
+
+.tx-item:hover {
+  background: var(--clr-card-high);
+}
+
+.tx-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tx-icon {
+  font-size: 1.25rem;
+  color: var(--clr-text);
+}
+
+.tx-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.tx-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.tx-date {
+  font-size: 0.8125rem;
+  color: var(--clr-text-sub);
+}
+
+.tx-amount {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.tx-amount.positive {
+  color: var(--clr-positive);
+}
+
+.tx-amount.negative {
+  color: var(--clr-negative);
+}
+
+/* spacer keeps content above the floating nav */
+.nav-spacer {
+  height: 100px;
+}
 </style>

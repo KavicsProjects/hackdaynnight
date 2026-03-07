@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import Graph from '../components/linegraph.vue';
-
+await navigateTo('/home', { replace: true })
 </script>
 
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-      <linegraph />
-    <NuxtWelcome />
-    <Navigation />
-  </div>
+  <div></div>
 </template>
+
