@@ -135,11 +135,7 @@ const activePeriod = ref('1M')
 
 const transactions = computed(() => recentTransactions.value.length > 0
   ? recentTransactions.value
-  : [
-    { name: 'Salary', date: 'Jun 1', amount: 450000, icon: 'mdi:bank-transfer-in', bg: 'rgba(0, 212, 170, 0.15)' },
-    { name: 'Grocery Store', date: 'Jun 3', amount: -12400, icon: 'mdi:cart-outline', bg: 'rgba(108, 99, 255, 0.15)' },
-    { name: 'Freelance payment', date: 'Jun 7', amount: 85000, icon: 'mdi:briefcase-outline', bg: 'rgba(0, 152, 239, 0.15)' },
-  ]
+  : []
 )</script>
 
 <style scoped>
