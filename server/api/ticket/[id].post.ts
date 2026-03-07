@@ -20,9 +20,12 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event);
     const { title, content } = body
+    const tags: string[] | undefined = Array.isArray(body.tags)
+        ? body.tags.filter((t: unknown) => typeof t === 'string' && t.trim() !== '').map((t: string) => t.trim().toLowerCase().replace(/\s+/g, '-'))
+        : undefined
     const ticket = await prisma.ticket.update({
         where: { id },
-        data: { title, content }
+        data: { title, content, ...(tags !== undefined ? { tags } : {}) }
     });
     return {
         ticket: ticket
