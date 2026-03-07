@@ -25,18 +25,6 @@ export default defineEventHandler(async (event) => {
         }
     })
 
-    const balanceResp = await prisma.user.findUnique({
-        where: {
-            id: body.userId
-        },
-        select: {
-            balance: true
-        }
-    });
-
-    let balance;
-    if (balanceResp === null) { balance = 0 } else { balance = balanceResp.balance };
-
     const ticketResp = await prisma.ticket.findUnique({
         where: {
             id: id
@@ -61,7 +49,7 @@ export default defineEventHandler(async (event) => {
                 id: body.userId
             },
             data: {
-                balance: balance + ticketResp.reward
+                balance: {increment: ticketResp.reward}
             }
         });
 
