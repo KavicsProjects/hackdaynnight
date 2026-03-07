@@ -1,231 +1,104 @@
 <template>
-  <div class="page-container">
-    <div class="header">
-        <NuxtImg class="profile-pic" src="img/profile-name.jpg" />
+  <div class="background page">
+    <div>
+      <NuxtImg class="profile-pic" src="img/profile-name.jpg" />
     </div>
 
-    <div class="main-content">
-      <h1 class="balance-text">HUF 999999</h1>
-      <div class="lineargraph">
-          <Linegraph />
+    <h1>HUF {{ balance }}</h1>
+    <div>
+      <div class="graph">
+        <Linegraph />
       </div>
+    </div>
+    <section class="tasks-transactions">
 
-      <div class="row middle-row tasks-container">
+      <div class="task-wrapper">
         <div v-for="(task, index) in tasks" :key="index" class="task-card">
-          <h2 class="task-title">{{ task.title }}</h2>
-          <p class="task-description">{{ task.description }}</p>
+          <h2>{{ task.title }}</h2>
+          <p>{{ task.description }}</p>
         </div>
+        <NuxtLink to="/tasklist" title="Tasks">
+          More
+        </NuxtLink>
       </div>
-    </div>
+
+      <div class="transaction-wrapper">
+        <div v-for="(task, index) in tasks" :key="index" class="task-card">
+          <h2>{{ task.title }}</h2>
+          <p>{{ task.description }}</p>
+        </div>
+        <NuxtLink to="/transactions" title="Transactionlist">
+          More
+        </NuxtLink>
+      </div>
+    </section>
+
   </div>
 
-  <div class="page-wrapper">
-    <div class="row bottom-row">
-      <button class="btn btn-secondary">Other</button>
-      <button class="btn btn-primary">Transaction List</button>
-    </div>
-  </div>
 </template>
 
-<style>
-/* Reset and Base Styles */
-html, body {
-  margin: 0;
-  padding: 0;
-  background-color: #2c3e50;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #ffffff;
-}
+<style scoped>
+.page {
+  display: grid;
+  grid-template-areas: "profile"
+    "balance"
+    "graph"
+    "tasks-transactions";
 
-.page-wrapper {
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
-}
-
-/* Common Row Padding */
-.row {
-  padding: 2rem;
-  box-sizing: border-box;
-}
-
-/* --- ROW 1: Top Row --- */
-.top-row {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  padding: 30px;
+  gap: 1rem;
 }
 
 .profile-pic {
-  width: 70px;
-  height: 70px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #34495e;
+  overflow: hidden;
 }
 
-.balance-text {
-  font-size: 3rem;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -1px;
+.graph {
+  grid-area: graph;
+  display: grid;
+  place-items: center;
 }
 
-/* --- ROW 2: Middle Row (Darker Background) --- */
-.middle-row {
-  background-color: #1a252f; /* Darker than the base #2c3e50 */
+.task-wrapper,
+.transaction-wrapper {
+  display: grid;
+  gap: 20px;
+  position: relative;
+  width: fit-content;
+  place-self: center;
+  border-radius: 25px;
+  padding: 20px;
+  background-color: var(--clr-wet-asphalt);
+
+  & a {
+    text-align: center;
+  }
+}
+
+.task-wrapper::after,
+.transaction-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(transparent 30%, rgba(0, 0, 0, 0.3) 90%);
+  border-radius: 25px;
+  pointer-events: none;
+}
+
+.tasks-transactions  {
   display: flex;
+  grid-area: tasks-transactions;
+  width: 100%;
   justify-content: center;
-}
-
-.tasks-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.task-card {
-  background-color: #2c3e50; /* Cards match the original base color */
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-
-.task-title {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.25rem;
-  color: #ecf0f1;
-}
-
-.task-description {
-  margin: 0;
-  font-size: 1rem;
-  color: #bdc3c7;
-  line-height: 1.5;
-}
-
-/* --- ROW 3: Bottom Row --- */
-.bottom-row {
-
-}
-
-/* Button Base Styles */
-.btn {
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-/* Primary Button (Transaction List - Off-White) */
-.btn-primary {
-  background-color: #ecf0f1;
-  color: #2c3e50; /* Dark text for contrast */
-  border: none;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.btn-primary:hover {
-  background-color: #ffffff;
-  transform: translateY(-1px);
-}
-
-/* Secondary Button (Other) */
-.btn-secondary {
-  background-color: transparent;
-  color: #ecf0f1;
-  border: 2px solid #7f8c8d;
-}
-
-.btn-secondary:hover {
-  background-color: #34495e;
-  border-color: #bdc3c7;
-}
-
-/* Reset some default browser margins for a clean look */
-html, body {
-  margin: 0;
-  padding: 0;
-  background-color: #2c3e50;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #ffffff;
-}
-
-.page-container {
-  min-height: 100vh;
-  padding: 2rem;
-  box-sizing: border-box;
-}
-
-/* Header with Top-Left Profile Picture */
-.header {
-  margin-bottom: 2rem;
-}
-
-.profile-pic {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #34495e;
-}
-
-/* Main Content Layout */
-.main-content {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-}
-
-/* Big Text styling */
-.balance-text {
-  font-size: 4rem;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -1px;
-}
-
-
-.lineargraph {
-    display: flex;
-    justify-content: center;
-}
-
-
-/* Tasks Column */
-.tasks-container {
-  display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: center;
-  width:100%;
-}
-
-.task-card {
-  background-color: #34495e;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  min-width:100px;
-  flex-basis:15rem;
-}
-
-.task-title {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.25rem;
-  color: #ecf0f1;
-}
-
-.task-description {
-  margin: 0;
-  font-size: 1rem;
-  color: #bdc3c7;
-  line-height: 1.5;
+  gap: 1rem;
 }
 
 
@@ -234,6 +107,8 @@ html, body {
 <script setup>
 
 import { ref } from 'vue'
+
+const balance = 99999;
 
 // Mock data for the tasks column
 const tasks = ref([
