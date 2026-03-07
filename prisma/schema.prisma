@@ -9,8 +9,11 @@ generator client {
   output   = "../app/generated/prisma"
 }
 
+// prisma/schema.prisma
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  // uncomment next line if you use Prisma <5.10
+  // directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model User {
@@ -29,7 +32,21 @@ model User {
 
   ticketsCreated ticket[]
 
-  ticketsAccepted ticket[] @relation("ticketCompetitors")
+  userTicketConnects UserTicketConnect[]
+
+  @@map("user")
+}
+
+model UserTicketConnect {
+  userId    String
+  ticketId  String
+  userMarkedComplete Boolean  @default(false)
+  acceptedByAuthor Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id])
+  ticket    ticket   @relation(fields: [ticketId], references: [id])
+
+  @@id([userId, ticketId])
+  @@map("user_ticket_connect")
 }
 
 model Transaction {
@@ -40,6 +57,8 @@ model Transaction {
   user                User     @relation("UserTransactionsSent", fields: [userId], references: [id])
   receiver            User     @relation("UserTransactionsReceived", fields: [receiverId], references: [id])
   createdAt           DateTime @default(now())
+
+  @@map("transactions")
 }
 
 model ticket {
@@ -51,6 +70,9 @@ model ticket {
   user      User     @relation(fields: [userId], references: [id])
   maxParticipants Int
   maxFinishers Int
-  competitors User[] @relation("ticketCompetitors")
   createdAt DateTime @default(now())
+
+  userTicketConnects UserTicketConnect[]
+
+  @@map("tickets")
 }
