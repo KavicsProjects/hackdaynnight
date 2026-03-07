@@ -28,9 +28,9 @@
     <section class="balance-card">
       <p class="balance-label">Total Balance</p>
       <h1 class="balance-amount">{{ (user?.balance ?? 0).toLocaleString('hu-HU') }} <span class="balance-currency">HUF</span></h1>
-      <div class="balance-change positive">
-        <Icon name="mdi:trending-up" class="change-icon" />
-        <span>+2.4% this month</span>
+      <div class="balance-change" :class="actualEarnings >= 0 ? 'positive' : 'negative'">
+        <Icon :name="actualEarnings >= 0 ? 'mdi:trending-up' : 'mdi:trending-down'" class="change-icon" />
+        <span>{{ actualEarnings >= 0 ? '+' : '' }}{{ actualEarnings.toLocaleString('hu-HU') }} HUF {{ actualEarnings >= 0 ? 'earned' : 'lost' }}</span>
       </div>
     </section>
 
@@ -112,6 +112,13 @@ onMounted(async () => {
       }))
     } catch {}
   }
+})
+
+const actualEarnings = computed(() => {
+  if (!user.value) return 0
+  return allTransactions.value
+    .filter(tx => tx.receiverId === user.value!.id)
+    .reduce((sum, tx) => sum + tx.amount, 0)
 })
 
 const greeting = computed(() => {
