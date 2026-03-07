@@ -1,121 +1,92 @@
 <template>
-  <nav class="bottom-header-container">
-    <div class="glass-dock">
-      <NuxtLink to="/" class="nav-item" title="Home">
-        <div class="icon-wrapper">
-          <Icon class="icon" name="mdi:home-variant" />
-        </div>
+  <nav class="bottom-nav">
+    <div class="nav-pill">
+      <NuxtLink to="/home" class="nav-item" title="Home">
+        <Icon name="mdi:home-variant-outline" class="nav-icon" />
+        <span class="nav-label">Home</span>
       </NuxtLink>
 
-      <NuxtLink to="/explore" class="nav-item" title="Explore">
-        <div class="icon-wrapper">
-          <Icon class="icon" name="mdi:home-variant" />
-        </div>
+      <NuxtLink to="/qrgenerator" class="nav-item" title="QR">
+        <Icon name="mdi:qrcode-scan" class="nav-icon" />
+        <span class="nav-label">QR</span>
+      </NuxtLink>
+
+      <NuxtLink to="/fizetesek" class="nav-item" title="Payments">
+        <Icon name="mdi:swap-horizontal" class="nav-icon" />
+        <span class="nav-label">Payments</span>
       </NuxtLink>
 
       <NuxtLink to="/profile" class="nav-item" title="Profile">
-        <div class="icon-wrapper">
-          <Icon class="icon" name="mdi:home-variant" />
-        </div>
+        <Icon name="mdi:account-outline" class="nav-icon" />
+        <span class="nav-label">Profile</span>
       </NuxtLink>
     </div>
   </nav>
 </template>
 
 <style scoped>
-/* Container to position the "header" at the bottom */
-.bottom-header-container {
+.bottom-nav {
   position: fixed;
-  bottom: 2rem;
+  bottom: 1.25rem;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
   z-index: 999;
-  pointer-events: none; /* Let clicks pass through background */
+  pointer-events: none;
 }
 
-/* The Glassmorphic Dock */
-.glass-dock {
+.nav-pill {
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: rgba(76, 240, 11, 0.7);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.25rem;
+  padding: 0.625rem 1rem;
+  background: var(--clr-card);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--clr-border);
   border-radius: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
 }
 
-/* Smooth hover scaling for the whole dock */
-.glass-dock:hover {
-  transform: translateY(-5px) scale(1.02);
-}
-
-/* Individual Nav Items */
 .nav-item {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem;
+  gap: 0.2rem;
+  padding: 0.5rem 1rem;
+  border-radius: 1.25rem;
   text-decoration: none;
-  transition: transform 0.2s ease;
+  color: var(--clr-text-sub);
+  transition: color 0.2s, background 0.2s;
 }
 
-.icon-wrapper {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  background: transparent;
+.nav-item:hover {
+  color: var(--clr-text);
+  background: var(--clr-card-high);
 }
 
-.icon {
-  width: 24px;
-  height: 24px;
-  fill: rgba(255, 255, 255, 0.6);
-  transition: fill 0.3s ease, filter 0.3s ease;
+.router-link-active {
+  color: var(--clr-primary);
+  background: var(--clr-primary-dim);
 }
 
-/* Fancy Hover Effects */
-.nav-item:hover .icon-wrapper {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-8px);
+.nav-icon {
+  font-size: 1.375rem;
 }
 
-.nav-item:hover .icon {
-  fill: #fff;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+.nav-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
 }
 
-/* Active State (Nuxt automatic class) */
-.router-link-active .icon {
-  fill: #3b82f6; /* Fancy Blue */
-  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.6));
-}
-
-
-.router-link-active .active-indicator {
-  opacity: 1;
-  transform: scale(1.5);
-}
-
-/* Responsive tweak for smaller screens */
-@media (max-width: 480px) {
-  .bottom-header-container {
-    bottom: 1rem;
+@media (max-width: 360px) {
+  .nav-label {
+    display: none;
   }
-  .glass-dock {
-    padding: 0.5rem 1rem;
-    gap: 0.5rem;
+  .nav-item {
+    padding: 0.5rem 0.75rem;
   }
 }
 </style>
