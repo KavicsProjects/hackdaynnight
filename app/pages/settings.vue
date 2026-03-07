@@ -75,6 +75,29 @@
         </div>
       </section>
 
+      <!-- Theme -->
+      <section class="settings-card">
+        <p class="card-label">Appearance</p>
+        <div class="theme-row">
+          <button
+            class="theme-btn"
+            :class="{ active: theme === 'dark' }"
+            @click="applyTheme('dark')"
+          >
+            <Icon name="mdi:weather-night" class="theme-icon" />
+            <span>Dark</span>
+          </button>
+          <button
+            class="theme-btn"
+            :class="{ active: theme === 'light' }"
+            @click="applyTheme('light')"
+          >
+            <Icon name="mdi:white-balance-sunny" class="theme-icon" />
+            <span>Light</span>
+          </button>
+        </div>
+      </section>
+
       <!-- Save button -->
       <button class="save-btn" :disabled="saving" @click="saveSettings">
         <span v-if="saving" class="spinner-sm"></span>
@@ -102,6 +125,7 @@
 
 <script setup>
 const { user, fetchUser, authHeaders } = useAuth()
+const { theme, applyTheme } = useTheme()
 
 const loading = ref(true)
 const saving = ref(false)
@@ -378,6 +402,44 @@ function formatDate(dateStr) {
 .save-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ── Theme selector ── */
+.theme-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.theme-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.875rem 0.5rem;
+  background: var(--clr-surface);
+  border: 2px solid var(--clr-border);
+  border-radius: 14px;
+  color: var(--clr-text-sub);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.theme-btn.active {
+  border-color: var(--clr-primary);
+  color: var(--clr-primary);
+  background: var(--clr-primary-dim);
+}
+
+.theme-btn:hover:not(.active) {
+  background: var(--clr-card-high);
+}
+
+.theme-icon {
+  font-size: 1.5rem;
 }
 
 /* ── Status messages ── */

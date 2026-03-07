@@ -39,6 +39,22 @@
     box-sizing: border-box;
 }
 
+:root.light {
+    --clr-bg:          #F4F6FB;
+    --clr-surface:     #ECEEF5;
+    --clr-card:        #FFFFFF;
+    --clr-card-high:   #F0F2FA;
+    --clr-border:      rgba(0, 0, 0, 0.08);
+    --clr-primary:     #009E80;
+    --clr-primary-dim: rgba(0, 158, 128, 0.12);
+    --clr-accent:      #5A52D5;
+    --clr-positive:    #009E80;
+    --clr-negative:    #D93B5A;
+    --clr-text:        #0D0D1A;
+    --clr-text-sub:    #555570;
+    --clr-text-dim:    #9999BB;
+}
+
 *, *::before, *::after {
     margin: 0;
     padding: 0;

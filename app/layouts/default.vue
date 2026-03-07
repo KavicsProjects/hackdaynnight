@@ -5,6 +5,11 @@
   </div>
 </template>
 
+<script setup>
+const { initTheme } = useTheme()
+onMounted(() => initTheme())
+</script>
+
 <style>
 .app-root {
   background: var(--clr-bg);
