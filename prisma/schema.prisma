@@ -21,7 +21,7 @@ model User {
   name           String
   email          String   @unique
   password       String
-  balance        Float    @default(0)
+  balance        Float    @default(100000)
   profilePicture String?
 
   createdAt DateTime @default(now())
@@ -71,6 +71,7 @@ model ticket {
   user      User     @relation(fields: [userId], references: [id])
   maxParticipants Int
   maxFinishers Int
+  allowedEmails String[]
   createdAt DateTime @default(now())
 
   userTicketConnects UserTicketConnect[]
