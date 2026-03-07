@@ -21,6 +21,11 @@
         <span class="nav-label">Payments</span>
       </NuxtLink>
 
+      <NuxtLink to="/requests" class="nav-item" title="Requests">
+        <Icon name="mdi:hand-coin-outline" class="nav-icon" />
+        <span class="nav-label">Requests</span>
+      </NuxtLink>
+
       <NuxtLink to="/profile" class="nav-item" title="Profile">
         <Icon name="mdi:account-outline" class="nav-icon" />
         <span class="nav-label">Profile</span>
