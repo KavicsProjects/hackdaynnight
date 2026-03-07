@@ -38,3 +38,6 @@ GET http://localhost:3000/api/ticket/ HTTP/1.1
 GET http://localhost:3000/api/user/ HTTP/1.1
 
 ###
+DELETE http://localhost:3000/api/ticket/cmmfh29590000jkvdcp0fubot HTTP/1.1
+
+###
