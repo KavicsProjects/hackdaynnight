@@ -2,9 +2,10 @@ import { verifyToken } from '../utils/jwt'
 
 export default defineEventHandler((event) => {
   const url = event.node.req.url ?? ''
+  const path = url.split('?')[0]
 
-  // Only protect /api routes except auth endpoints; public routes are intentionally unprotected
-  if (!url.startsWith('/api/') || url.startsWith('/api/auth/')) return
+  // Only protect /api routes except public auth endpoints (login & register)
+  if (!path.startsWith('/api/') || path === '/api/auth/login' || path === '/api/auth/register') return
 
   const authHeader = getRequestHeader(event, 'authorization')
   if (!authHeader?.startsWith('Bearer ')) {
