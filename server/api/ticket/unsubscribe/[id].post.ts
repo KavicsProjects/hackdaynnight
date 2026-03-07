@@ -1,26 +1,21 @@
 export default defineEventHandler(async (event) => {
-    //TODO átírni GET req-re és -> userId: event.context.auth.userId,
+    const auth = event.context.auth
+    if (!auth?.userId) {
+        setResponseStatus(event, 401)
+        return { error: 'Unauthorized' }
+    }
 
+    const id = getRouterParam(event, 'id')
 
-    const id = getRouterParam(event, 'id');
-    const body = await readBody(event);
-
-    if(!body.userId || !id){
-        setResponseStatus(event, 400);
-        return {
-            error: "Missing userId or ticketId"
-        }
+    if (!id) {
+        setResponseStatus(event, 400)
+        return { error: 'Missing ticketId' }
     }
 
     const resp = await prisma.userTicketConnect.delete({
         where: {
-            userId_ticketId:{
-                userId: body.userId,
-                ticketId: id
-            }
+            userId_ticketId: { userId: auth.userId, ticketId: id }
         }
     })
-    return {
-        ticket: resp
-    }
+    return { ticket: resp }
 })

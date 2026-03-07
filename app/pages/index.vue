@@ -1,5 +1,6 @@
 <script setup lang="ts">
-await navigateTo('/home', { replace: true })
+const { isLoggedIn } = useAuth()
+await navigateTo(isLoggedIn.value ? '/home' : '/loginregister', { replace: true })
 </script>
 
 <template>
