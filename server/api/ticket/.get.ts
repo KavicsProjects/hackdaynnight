@@ -17,12 +17,22 @@ export default defineEventHandler(async (event) => {
 
     const userEmail = currentUser.email.toLowerCase()
 
+    const query = getQuery(event)
+    const tagFilter = typeof query.tag === 'string' && query.tag.trim() !== ''
+        ? query.tag.trim().toLowerCase()
+        : null
+
     const tickets = await prisma.ticket.findMany({
         where: {
-            OR: [
-                { userId: auth.userId },
-                { allowedEmails: { isEmpty: true } },
-                { allowedEmails: { has: userEmail } }
+            AND: [
+                {
+                    OR: [
+                        { userId: auth.userId },
+                        { allowedEmails: { isEmpty: true } },
+                        { allowedEmails: { has: userEmail } }
+                    ]
+                },
+                ...(tagFilter ? [{ tags: { has: tagFilter } }] : [])
             ]
         },
         include: {

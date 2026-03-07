@@ -26,6 +26,10 @@ export default defineEventHandler(async (event) => {
         ? body.allowedEmails.filter((e: unknown) => typeof e === 'string' && e.trim() !== '').map((e: string) => e.trim().toLowerCase())
         : []
 
+    const tags: string[] = Array.isArray(body.tags)
+        ? body.tags.filter((t: unknown) => typeof t === 'string' && t.trim() !== '').map((t: string) => t.trim().toLowerCase().replace(/\s+/g, '-'))
+        : []
+
     const totalEscrow = body.reward * body.maxFinishers
 
     const result = await prisma.$transaction(async (tx) => {
@@ -57,7 +61,8 @@ export default defineEventHandler(async (event) => {
                 reward: body.reward,
                 maxFinishers: body.maxFinishers,
                 maxParticipants: body.maxParticipants,
-                allowedEmails
+                allowedEmails,
+                tags
             }
         });
 

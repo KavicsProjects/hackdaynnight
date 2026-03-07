@@ -23,6 +23,30 @@
       </button>
     </div>
 
+    <!-- Filter & Sort bar -->
+    <div class="filter-bar">
+      <div class="tag-filters" v-if="allTags.length > 0">
+        <button
+          class="tag-filter-btn"
+          :class="{ active: activeTagFilter === null }"
+          @click="activeTagFilter = null"
+        >All</button>
+        <button
+          v-for="tag in allTags"
+          :key="tag"
+          class="tag-filter-btn"
+          :class="{ active: activeTagFilter === tag }"
+          @click="activeTagFilter = activeTagFilter === tag ? null : tag"
+        >#{{ tag }}</button>
+      </div>
+      <select v-model="sortOrder" class="sort-select">
+        <option value="date_desc">Newest first</option>
+        <option value="date_asc">Oldest first</option>
+        <option value="reward_desc">Reward ↓</option>
+        <option value="reward_asc">Reward ↑</option>
+      </select>
+    </div>
+
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
     </div>
@@ -50,6 +74,14 @@
             </div>
           </div>
           <p class="ticket-content">{{ ticket.content }}</p>
+          <div v-if="ticket.tags && ticket.tags.length > 0" class="ticket-tags">
+            <span
+              v-for="tag in ticket.tags"
+              :key="tag"
+              class="ticket-tag"
+              @click="activeTagFilter = activeTagFilter === tag ? null : tag"
+            >#{{ tag }}</span>
+          </div>
           <div class="ticket-meta">
             <span class="meta-item">
               <Icon name="mdi:account-group" class="meta-icon" />
@@ -119,6 +151,14 @@
             </div>
           </div>
           <p class="ticket-content">{{ ticket.content }}</p>
+          <div v-if="ticket.tags && ticket.tags.length > 0" class="ticket-tags">
+            <span
+              v-for="tag in ticket.tags"
+              :key="tag"
+              class="ticket-tag"
+              @click="activeTagFilter = activeTagFilter === tag ? null : tag"
+            >#{{ tag }}</span>
+          </div>
           <div class="ticket-meta">
             <span class="meta-item">
               <Icon name="mdi:account-group" class="meta-icon" />
@@ -154,14 +194,53 @@
             </div>
           </div>
 
-          <button
-            class="delete-btn"
-            :disabled="deleting === ticket.id"
-            @click="deleteTask(ticket.id)"
-          >
-            <Icon name="mdi:trash-can-outline" />
-            {{ deleting === ticket.id ? 'Deleting...' : 'Delete Task' }}
-          </button>
+          <!-- Inline tag editor -->
+          <div v-if="editingTagsFor === ticket.id" class="tag-editor">
+            <div class="email-input-row">
+              <input
+                v-model="editTagInput"
+                type="text"
+                placeholder="Add tag..."
+                class="text-input"
+                @keyup.enter="addEditTag(ticket.id)"
+              />
+              <button class="add-email-btn" @click="addEditTag(ticket.id)">
+                <Icon name="mdi:plus" />
+              </button>
+            </div>
+            <div v-if="editTagList.length > 0" class="email-tags">
+              <span
+                v-for="tag in editTagList"
+                :key="tag"
+                class="ticket-tag removable"
+                @click="removeEditTag(tag)"
+              >
+                #{{ tag }} <Icon name="mdi:close" class="tag-close" />
+              </span>
+            </div>
+            <div class="tag-editor-actions">
+              <button class="save-tags-btn" :disabled="savingTags === ticket.id" @click="saveTags(ticket.id)">
+                <span v-if="savingTags === ticket.id" class="spinner-sm"></span>
+                {{ savingTags === ticket.id ? 'Saving...' : 'Save Tags' }}
+              </button>
+              <button class="cancel-tags-btn" @click="editingTagsFor = null">Cancel</button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="edit-tags-btn" @click="openTagEditor(ticket)">
+              <Icon name="mdi:tag-edit-outline" />
+              Tags
+            </button>
+            <button
+              class="delete-btn"
+              :disabled="deleting === ticket.id"
+              @click="deleteTask(ticket.id)"
+            >
+              <Icon name="mdi:trash-can-outline" />
+              {{ deleting === ticket.id ? 'Deleting...' : 'Delete Task' }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -187,6 +266,14 @@
             </div>
           </div>
           <p class="ticket-content">{{ ticket.content }}</p>
+          <div v-if="ticket.tags && ticket.tags.length > 0" class="ticket-tags">
+            <span
+              v-for="tag in ticket.tags"
+              :key="tag"
+              class="ticket-tag"
+              @click="activeTagFilter = activeTagFilter === tag ? null : tag"
+            >#{{ tag }}</span>
+          </div>
           <div class="ticket-actions">
             <button
               v-if="!isCompleted(ticket) && !isAccepted(ticket)"
@@ -249,6 +336,31 @@
             <input v-model.number="newTask.maxParticipants" type="number" min="1" placeholder="10" class="text-input" />
           </div>
           <div class="input-group">
+            <label>Tags (optional, for filtering)</label>
+            <div class="email-input-row">
+              <input
+                v-model="tagInput"
+                type="text"
+                placeholder="e.g. design"
+                class="text-input"
+                @keyup.enter="addTag"
+              />
+              <button class="add-email-btn" @click="addTag">
+                <Icon name="mdi:plus" />
+              </button>
+            </div>
+            <div class="email-tags" v-if="newTask.tags.length > 0">
+              <span
+                v-for="tag in newTask.tags"
+                :key="tag"
+                class="ticket-tag removable"
+                @click="removeTag(tag)"
+              >
+                #{{ tag }} <Icon name="mdi:close" class="tag-close" />
+              </span>
+            </div>
+          </div>
+          <div class="input-group">
             <label>Allowed emails (optional, leave empty for public)</label>
             <div class="email-input-row">
               <input
@@ -305,13 +417,21 @@ const showCreateModal = ref(false)
 const creating = ref(false)
 const createError = ref('')
 const emailInput = ref('')
+const tagInput = ref('')
+const activeTagFilter = ref(null)
+const sortOrder = ref('date_desc')
+const editingTagsFor = ref(null)
+const editTagInput = ref('')
+const editTagList = ref([])
+const savingTags = ref(null)
 const newTask = reactive({
   title: '',
   content: '',
   reward: 0,
   maxFinishers: 1,
   maxParticipants: 10,
-  allowedEmails: []
+  allowedEmails: [],
+  tags: []
 })
 
 const tabs = [
@@ -337,16 +457,41 @@ async function loadTickets() {
 
 const myUserId = computed(() => user.value?.id)
 
+// Collect all unique tags across all visible tickets
+const allTags = computed(() => {
+  const tagSet = new Set()
+  for (const t of tickets.value) {
+    if (Array.isArray(t.tags)) {
+      for (const tag of t.tags) tagSet.add(tag)
+    }
+  }
+  return Array.from(tagSet).sort()
+})
+
+function applySort(list) {
+  const arr = [...list]
+  if (sortOrder.value === 'date_desc') arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  else if (sortOrder.value === 'date_asc') arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+  else if (sortOrder.value === 'reward_desc') arr.sort((a, b) => b.reward - a.reward)
+  else if (sortOrder.value === 'reward_asc') arr.sort((a, b) => a.reward - b.reward)
+  return arr
+}
+
+function applyTagFilter(list) {
+  if (!activeTagFilter.value) return list
+  return list.filter(t => Array.isArray(t.tags) && t.tags.includes(activeTagFilter.value))
+}
+
 const availableTickets = computed(() =>
-  tickets.value.filter(t => t.userId !== myUserId.value && !isApplied(t))
+  applySort(applyTagFilter(tickets.value.filter(t => t.userId !== myUserId.value && !isApplied(t))))
 )
 
 const myTickets = computed(() =>
-  tickets.value.filter(t => t.userId === myUserId.value)
+  applySort(applyTagFilter(tickets.value.filter(t => t.userId === myUserId.value)))
 )
 
 const appliedTickets = computed(() =>
-  tickets.value.filter(t => t.userId !== myUserId.value && isApplied(t))
+  applySort(applyTagFilter(tickets.value.filter(t => t.userId !== myUserId.value && isApplied(t))))
 )
 
 function isOwner(ticket) {
@@ -458,6 +603,55 @@ function removeEmail(email) {
   newTask.allowedEmails = newTask.allowedEmails.filter(e => e !== email)
 }
 
+function addTag() {
+  const tag = tagInput.value.trim().toLowerCase().replace(/\s+/g, '-')
+  if (!tag) return
+  if (!newTask.tags.includes(tag)) {
+    newTask.tags.push(tag)
+  }
+  tagInput.value = ''
+}
+
+function removeTag(tag) {
+  newTask.tags = newTask.tags.filter(t => t !== tag)
+}
+
+function openTagEditor(ticket) {
+  editingTagsFor.value = ticket.id
+  editTagList.value = Array.isArray(ticket.tags) ? [...ticket.tags] : []
+  editTagInput.value = ''
+}
+
+function addEditTag() {
+  const tag = editTagInput.value.trim().toLowerCase().replace(/\s+/g, '-')
+  if (!tag) return
+  if (!editTagList.value.includes(tag)) {
+    editTagList.value.push(tag)
+  }
+  editTagInput.value = ''
+}
+
+function removeEditTag(tag) {
+  editTagList.value = editTagList.value.filter(t => t !== tag)
+}
+
+async function saveTags(ticketId) {
+  savingTags.value = ticketId
+  try {
+    await $fetch(`/api/ticket/${ticketId}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: { tags: editTagList.value }
+    })
+    editingTagsFor.value = null
+    await loadTickets()
+  } catch (err) {
+    alert(err?.data?.error ?? 'Failed to save tags')
+  } finally {
+    savingTags.value = null
+  }
+}
+
 async function createTask() {
   createError.value = ''
   if (!newTask.title || !newTask.content) {
@@ -487,11 +681,12 @@ async function createTask() {
         reward: newTask.reward,
         maxFinishers: newTask.maxFinishers,
         maxParticipants: newTask.maxParticipants,
-        allowedEmails: newTask.allowedEmails
+        allowedEmails: newTask.allowedEmails,
+        tags: newTask.tags
       }
     })
     showCreateModal.value = false
-    Object.assign(newTask, { title: '', content: '', reward: 0, maxFinishers: 1, maxParticipants: 10, allowedEmails: [] })
+    Object.assign(newTask, { title: '', content: '', reward: 0, maxFinishers: 1, maxParticipants: 10, allowedEmails: [], tags: [] })
     await loadTickets()
     await fetchUser()
     activeTab.value = 'mine'
@@ -581,6 +776,79 @@ function formatDate(dateStr) {
   background: var(--clr-card-high);
   color: var(--clr-text);
 }
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tag-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.tag-filter-btn {
+  padding: 0.3rem 0.75rem;
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: 999px;
+  color: var(--clr-text-sub);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.tag-filter-btn.active {
+  background: var(--clr-primary-dim);
+  color: var(--clr-primary);
+  border-color: var(--clr-primary);
+}
+
+.sort-select {
+  padding: 0.4rem 0.75rem;
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  color: var(--clr-text-sub);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.ticket-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.ticket-tag {
+  background: var(--clr-primary-dim);
+  color: var(--clr-primary);
+  border: 1px solid rgba(0, 212, 170, 0.25);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ticket-tag:hover { background: rgba(0, 212, 170, 0.25); }
+
+.ticket-tag.removable {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ticket-tag.removable:hover { border-color: var(--clr-negative); color: var(--clr-negative); background: rgba(255,92,122,0.08); }
 
 .loading-state {
   display: flex;
@@ -853,6 +1121,80 @@ function formatDate(dateStr) {
 }
 
 .accept-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.edit-tags-btn {
+  padding: 0.625rem 1rem;
+  background: var(--clr-primary-dim);
+  color: var(--clr-primary);
+  border: 1px solid rgba(0, 212, 170, 0.25);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  transition: background 0.2s;
+}
+
+.edit-tags-btn:hover { background: rgba(0, 212, 170, 0.2); }
+
+.tag-editor {
+  background: var(--clr-bg);
+  border: 1px solid var(--clr-border);
+  border-radius: 14px;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.tag-editor-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-tags-btn {
+  padding: 0.5rem 1.25rem;
+  background: var(--clr-primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: opacity 0.2s;
+}
+
+.save-tags-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cancel-tags-btn {
+  padding: 0.5rem 1rem;
+  background: none;
+  color: var(--clr-text-sub);
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.cancel-tags-btn:hover { background: var(--clr-card-high); }
 
 .delete-btn {
   padding: 0.625rem 1rem;
