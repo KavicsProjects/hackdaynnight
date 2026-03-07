@@ -464,8 +464,16 @@ async function createTask() {
     createError.value = 'Title and description are required'
     return
   }
-  if (newTask.reward === null || newTask.reward < 0) {
+  if (typeof newTask.reward !== 'number' || isNaN(newTask.reward) || newTask.reward < 0) {
     createError.value = 'Reward must be 0 or more'
+    return
+  }
+  if (typeof newTask.maxFinishers !== 'number' || isNaN(newTask.maxFinishers) || newTask.maxFinishers < 1) {
+    createError.value = 'Max finishers must be at least 1'
+    return
+  }
+  if (typeof newTask.maxParticipants !== 'number' || isNaN(newTask.maxParticipants) || newTask.maxParticipants < 1) {
+    createError.value = 'Max participants must be at least 1'
     return
   }
   creating.value = true
@@ -488,7 +496,8 @@ async function createTask() {
     await fetchUser()
     activeTab.value = 'mine'
   } catch (err) {
-    createError.value = err?.data?.error ?? 'Failed to create task'
+    const errorMsg = err?.data?.error
+    createError.value = typeof errorMsg === 'string' ? errorMsg : 'Failed to create task'
   } finally {
     creating.value = false
   }

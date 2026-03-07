@@ -95,7 +95,7 @@ onMounted(async () => {
   if (user.value) {
     try {
       const data = await $fetch('/api/transaction/my', { headers: authHeaders() })
-      recentTransactions.value = (data.transactions ?? []).slice(0, 4).map(tx => ({
+      recentTransactions.value = (data.transactions ?? []).slice(0, 3).map(tx => ({
         name: tx.userId === user.value.id ? tx.receiver.name : tx.user.name,
         date: new Date(tx.createdAt).toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' }),
         amount: tx.userId === user.value.id ? -tx.amount : tx.amount,
@@ -121,7 +121,6 @@ const transactions = computed(() => recentTransactions.value.length > 0
   : [
     { name: 'Salary', date: 'Jun 1', amount: 450000, icon: 'mdi:bank-transfer-in', bg: 'rgba(0, 212, 170, 0.15)' },
     { name: 'Grocery Store', date: 'Jun 3', amount: -12400, icon: 'mdi:cart-outline', bg: 'rgba(108, 99, 255, 0.15)' },
-    { name: 'Netflix', date: 'Jun 5', amount: -3990, icon: 'mdi:television-play', bg: 'rgba(255, 92, 122, 0.15)' },
     { name: 'Freelance payment', date: 'Jun 7', amount: 85000, icon: 'mdi:briefcase-outline', bg: 'rgba(0, 152, 239, 0.15)' },
   ]
 )</script>
