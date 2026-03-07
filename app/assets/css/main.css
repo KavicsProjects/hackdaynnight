@@ -1,0 +1,54 @@
+:root {
+    --clr-midnight: #2c3e50;
+    --clr-whistera: #8e44ad;
+    --clr-belize-hole: #2980b9;
+    --clr-nephriis: #27ae60;
+    --clr-greensea: #16a085;
+    --clr-wet-asphalt: #34495e;
+    --clr-amethyst: #9b59b6;
+    --clr-peter-river: #3498db;
+    --clr-emerald: #2ecc71;
+    --clr-turquoise: #1abc9c;
+    --clr-sun-flower: #f1c40f;
+    --clr-carrot: #e67e22;
+    --clr-alizarin: #e74c3c;
+    --clr-clouds: #ecf0f1;
+    --clr-concrete: #95a5a6;
+    --clr-orange: #f39c12;
+    --clr-pumpkin: #d35400;
+    --clr-pomegranete: #c0392b;
+    --clr-silver: #bdc3c7;
+    --clr-asbestos: #7f8c8d;
+
+    box-sizing: border-box;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+a {
+    color: var(--clr-belize-hole);
+
+    &:hover, &:focus {
+        color: var(--clr-peter-river);
+    }
+
+    &:active {
+        color: var(--clr-alizarin);
+    }
+
+   
+    &:has(span.icon:only-child  ) {
+        color: var(--clr-clouds);
+    }
+
+}
+
+
+.background {
+    background: var(--clr-midnight);
+    min-height: 100vh;
+}
