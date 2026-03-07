@@ -40,34 +40,12 @@
           <p class="card-sub">Share to receive payments</p>
         </div>
       </div>
-
-      <!-- Amount input -->
-      <div class="amount-field">
-        <label class="amount-label">Request amount (HUF)</label>
-        <div class="amount-input-wrap">
-          <input
-            v-model.number="requestedAmount"
-            type="number"
-            min="1"
-            step="1"
-            class="amount-input"
-            placeholder="e.g. 5000"
-          />
-          <span class="amount-currency">HUF</span>
-        </div>
-      </div>
-
       <div class="qr-wrapper">
         <img
-          v-if="paymentLink"
-          :src="`https://api.qrserver.com/v1/create-qr-code/?size=240x240&bgcolor=1E1E2E&color=00D4AA&data=${encodeURIComponent(paymentLink)}`"
+          :src="`https://api.qrserver.com/v1/create-qr-code/?size=240x240&bgcolor=1E1E2E&color=00D4AA&data=${encodeURIComponent(fixLink)}`"
           alt="QR Code"
           class="qr-image"
         />
-        <div v-else class="qr-placeholder">
-          <Icon name="mdi:account-alert-outline" class="qr-placeholder-icon" />
-          <p>Log in to generate your QR code</p>
-        </div>
       </div>
       <p class="qr-hint">Scan this code to send money to you</p>
     </section>
@@ -90,9 +68,6 @@
           <strong>Scan successful!</strong>
           <p class="result-text">{{ scannedResult }}</p>
         </div>
-        <button v-if="isPaymentLink(scannedResult)" @click="goToPayment(scannedResult)" class="rescan-btn pay-now-btn">
-          Pay Now
-        </button>
         <button @click="startScanning" class="rescan-btn">Scan again</button>
       </div>
 
@@ -108,38 +83,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-const { user, fetchUser } = useAuth()
-
-const requestedAmount = ref(null)
+const fixLink = ref('https://en.wikipedia.org/wiki/Hide_the_Pain_Harold')
 const activeTab = ref('generator')
 const scannedResult = ref(null)
 const scanError = ref(null)
 let html5QrCode = null
-
-const paymentLink = computed(() => {
-  if (!user.value) return null
-  const base = process.client ? window.location.origin : ''
-  const params = new URLSearchParams({ to: user.value.id })
-  if (requestedAmount.value && requestedAmount.value > 0) {
-    params.set('amount', String(Math.round(requestedAmount.value)))
-  }
-  return `${base}/pay?${params.toString()}`
-})
-
-const isPaymentLink = (url) => {
-  try {
-    const u = new URL(url)
-    return u.pathname === '/pay' && u.searchParams.has('to')
-  } catch {
-    return false
-  }
-}
-
-const goToPayment = (url) => {
-  navigateTo(url)
-}
 
 const switchTab = (tabName) => {
   activeTab.value = tabName
@@ -164,9 +114,6 @@ const startScanning = () => {
     (decodedText) => {
       scannedResult.value = decodedText
       stopScanning()
-      if (isPaymentLink(decodedText)) {
-        navigateTo(decodedText)
-      }
     },
     () => {}
   ).catch((err) => {
@@ -180,8 +127,7 @@ const stopScanning = () => {
   }
 }
 
-onMounted(async () => {
-  await fetchUser()
+onMounted(() => {
   if (window.Html5Qrcode) return
   const script = document.createElement('script')
   script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
@@ -332,79 +278,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-/* ── Amount field ── */
-.amount-field {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.amount-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--clr-text-sub);
-}
-
-.amount-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--clr-card-high);
-  border: 1px solid var(--clr-border);
-  border-radius: 14px;
-  padding: 0.625rem 1rem;
-}
-
-.amount-input {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--clr-text);
-  font-family: inherit;
-  min-width: 0;
-}
-
-.amount-input::placeholder {
-  color: var(--clr-text-sub);
-  font-weight: 400;
-}
-
-.amount-currency {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--clr-text-sub);
-}
-
-/* ── QR placeholder (not logged in) ── */
-.qr-placeholder {
-  width: 200px;
-  height: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.625rem;
-  color: var(--clr-text-sub);
-  font-size: 0.8125rem;
-  text-align: center;
-}
-
-.qr-placeholder-icon {
-  font-size: 3rem;
-  color: var(--clr-text-sub);
-}
-
-/* ── Pay now button (inside scan result) ── */
-.pay-now-btn {
-  background: var(--clr-primary);
-  margin-bottom: 0.375rem;
-}
-
-
+/* ── Camera reader ── */
 .camera-reader {
   width: 100%;
   max-width: 280px;
