@@ -3,16 +3,20 @@
     <!-- Top header: avatar + greeting + notification bell -->
     <header class="top-header">
       <div class="profile-section">
-        <NuxtImg
-          class="avatar"
-          src="/img/profile-name.jpg"
-          alt="Profile picture"
-          width="48"
-          height="48"
-        />
+        <NuxtLink to="/profile">
+          <img
+            v-if="user?.profilePicture"
+            :src="user.profilePicture"
+            :alt="user.name"
+            class="avatar"
+          />
+          <div v-else class="avatar-placeholder">
+            <span>{{ user?.name?.charAt(0)?.toUpperCase() ?? 'U' }}</span>
+          </div>
+        </NuxtLink>
         <div class="greeting">
-          <span class="greeting-label">Good morning</span>
-          <span class="greeting-name">Alex</span>
+          <span class="greeting-label">{{ greeting }}</span>
+          <span class="greeting-name">{{ user?.name ?? 'Guest' }}</span>
         </div>
       </div>
       <button class="icon-btn" aria-label="Notifications">
@@ -23,7 +27,7 @@
     <!-- Balance card -->
     <section class="balance-card">
       <p class="balance-label">Total Balance</p>
-      <h1 class="balance-amount">999 999 <span class="balance-currency">HUF</span></h1>
+      <h1 class="balance-amount">{{ (user?.balance ?? 0).toLocaleString('hu-HU') }} <span class="balance-currency">HUF</span></h1>
       <div class="balance-change positive">
         <Icon name="mdi:trending-up" class="change-icon" />
         <span>+2.4% this month</span>
@@ -81,42 +85,46 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+
+const { user, fetchUser, authHeaders } = useAuth()
+const recentTransactions = ref([])
+
+onMounted(async () => {
+  await fetchUser()
+  if (user.value) {
+    try {
+      const data = await $fetch('/api/transaction/my', { headers: authHeaders() })
+      recentTransactions.value = (data.transactions ?? []).slice(0, 4).map(tx => ({
+        name: tx.userId === user.value.id ? tx.receiver.name : tx.user.name,
+        date: new Date(tx.createdAt).toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' }),
+        amount: tx.userId === user.value.id ? -tx.amount : tx.amount,
+        icon: tx.userId === user.value.id ? 'mdi:arrow-up' : 'mdi:arrow-down',
+        bg: tx.userId === user.value.id ? 'rgba(255, 92, 122, 0.15)' : 'rgba(0, 212, 170, 0.15)'
+      }))
+    } catch {}
+  }
+})
+
+const greeting = computed(() => {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 18) return 'Good afternoon'
+  return 'Good evening'
+})
 
 const periods = ['1W', '1M', '3M', '1Y']
 const activePeriod = ref('1M')
 
-const transactions = ref([
-  {
-    name: 'Salary',
-    date: 'Jun 1',
-    amount: 450000,
-    icon: 'mdi:bank-transfer-in',
-    bg: 'rgba(0, 212, 170, 0.15)',
-  },
-  {
-    name: 'Grocery Store',
-    date: 'Jun 3',
-    amount: -12400,
-    icon: 'mdi:cart-outline',
-    bg: 'rgba(108, 99, 255, 0.15)',
-  },
-  {
-    name: 'Netflix',
-    date: 'Jun 5',
-    amount: -3990,
-    icon: 'mdi:television-play',
-    bg: 'rgba(255, 92, 122, 0.15)',
-  },
-  {
-    name: 'Freelance payment',
-    date: 'Jun 7',
-    amount: 85000,
-    icon: 'mdi:briefcase-outline',
-    bg: 'rgba(0, 152, 239, 0.15)',
-  },
-])
-</script>
+const transactions = computed(() => recentTransactions.value.length > 0
+  ? recentTransactions.value
+  : [
+    { name: 'Salary', date: 'Jun 1', amount: 450000, icon: 'mdi:bank-transfer-in', bg: 'rgba(0, 212, 170, 0.15)' },
+    { name: 'Grocery Store', date: 'Jun 3', amount: -12400, icon: 'mdi:cart-outline', bg: 'rgba(108, 99, 255, 0.15)' },
+    { name: 'Netflix', date: 'Jun 5', amount: -3990, icon: 'mdi:television-play', bg: 'rgba(255, 92, 122, 0.15)' },
+    { name: 'Freelance payment', date: 'Jun 7', amount: 85000, icon: 'mdi:briefcase-outline', bg: 'rgba(0, 152, 239, 0.15)' },
+  ]
+)</script>
 
 <style scoped>
 .home {
@@ -148,6 +156,21 @@ const transactions = ref([
   object-fit: cover;
   border: 2px solid var(--clr-primary);
   flex-shrink: 0;
+}
+
+.avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  border: 2px solid var(--clr-primary);
 }
 
 .greeting {
